@@ -1,2 +1,66 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Audience · Istifada1448H</title><link rel="stylesheet" href="css/style.css"></head><body class="audience-page" data-page="audience"><main class="audience-shell"><div class="audience-brand">✦ <span id="audience-title">Istifada1448H</span></div><div class="audience-meta"><span id="audience-day">Loading…</span><span id="audience-group">All Groups</span></div><section class="audience-hero"><p class="eyebrow">Taweeliya Nikat Rasail Shareefa</p><h1 id="audience-status">Welcome</h1><p id="audience-announcement">Please wait for the next activity.</p></section><section id="audience-questions" class="audience-questions"></section><section id="leaderboard" class="leaderboard hidden"><h2>Leaderboard</h2><div id="leaderboard-list"></div></section><div class="audience-clock" id="audience-clock"></div></main><script src="js/config.js"></script><script src="js/utils.js"></script><script src="js/api.js"></script><script src="js/audience.js"></script></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Audience · Istifada1448H</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/audience-pdf.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body class="audience-page" data-page="audience">
+  <main class="audience-shell">
+    <div class="audience-brand">✦ <span id="audience-title">Istifada1448H</span></div>
+    <div class="audience-meta"><span id="audience-day">Loading…</span><span id="audience-group">All Groups</span></div>
+
+    <section class="audience-hero">
+      <p class="eyebrow">Taweeliya Nikat Rasail Shareefa</p>
+      <h1 id="audience-status">Welcome</h1>
+      <p id="audience-announcement">Please wait for the next activity.</p>
+    </section>
+
+    <section id="audience-questions" class="audience-questions"></section>
+
+    <section class="audience-pdf-card card" aria-labelledby="audience-pdf-heading">
+      <div class="section-heading">
+        <div>
+          <span class="step">PDF</span>
+          <h2 id="audience-pdf-heading">Audience PDF viewer</h2>
+        </div>
+      </div>
+      <p>Select a PDF from this device to display it to the audience. The file is rendered locally and is not uploaded to the application server.</p>
+      <div class="audience-pdf-toolbar">
+        <label class="audience-pdf-upload">
+          <span>Upload PDF</span>
+          <input id="audience-pdf-file" type="file" accept="application/pdf,.pdf">
+        </label>
+        <button id="audience-pdf-prev" class="audience-pdf-button" type="button" disabled>Previous</button>
+        <span class="audience-pdf-page">
+          <input id="audience-pdf-page" type="number" min="1" value="1" aria-label="PDF page" disabled>
+          <span>/</span><span id="audience-pdf-total">—</span>
+        </span>
+        <button id="audience-pdf-next" class="audience-pdf-button" type="button" disabled>Next</button>
+        <button id="audience-pdf-zoom-out" class="audience-pdf-button" type="button" aria-label="Zoom out">−</button>
+        <span id="audience-pdf-zoom">115%</span>
+        <button id="audience-pdf-zoom-in" class="audience-pdf-button" type="button" aria-label="Zoom in">+</button>
+        <span id="audience-pdf-status" class="audience-pdf-status" role="status">No PDF selected</span>
+      </div>
+      <div id="audience-pdf-stage" class="audience-pdf-stage empty">
+        <span id="audience-pdf-name">Choose a PDF to begin</span>
+        <canvas id="audience-pdf-canvas" class="audience-pdf-canvas" aria-label="Rendered PDF page"></canvas>
+      </div>
+    </section>
+
+    <section id="leaderboard" class="leaderboard hidden">
+      <h2>Leaderboard</h2>
+      <div id="leaderboard-list"></div>
+    </section>
+    <div class="audience-clock" id="audience-clock"></div>
+  </main>
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/audience.js"></script>
+  <script src="js/audience-pdf.js"></script>
+</body>
+</html>
