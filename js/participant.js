@@ -7,3 +7,17 @@ function renderQuiz(root){const q=participantState.quiz.questions[participantSta
 async function submitQuiz(e){ const btn=e.currentTarget; Utils.busy(btn,true,'Submitting…'); try { const result=await API.submitQuiz({muminId:currentParticipant.Mumin_ID,group:currentParticipant.Group_Name,answers:participantState.answers,day:participantState.quiz.day}); Utils.$('#quiz-root').innerHTML=`<div class="result"><div class="success-icon">✓</div><h2>Quiz Completed</h2><div class="result-grid"><div><small>Score</small><strong>${Utils.escape(result.score)}</strong></div><div><small>Total points</small><strong>${Utils.escape(result.totalPoints)}</strong></div><div><small>Percentage</small><strong>${Utils.escape(result.percentage)}%</strong></div><div><small>Status</small><strong>${Utils.escape(result.completed?'Completed':'Submitted')}</strong></div></div>${result.explanations?`<div class="explanations"><h3>Review</h3>${result.explanations.map(x=>`<p>${Utils.escape(x)}</p>`).join('')}</div>`:''}</div>`; } catch(x){Utils.setMessage(Utils.$('#quiz-root'),x.message,'error');} finally{Utils.busy(btn,false);} }
 async function submitQuestion(e){e.preventDefault(); const btn=e.submitter,msg=Utils.$('#question-message'); Utils.busy(btn,true,'Submitting…'); try {let fileId=''; const file=Utils.$('#question-image').files[0]; if(file){Utils.setMessage(msg,'Uploading image…'); const encoded=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file)}); const uploaded=await API.uploadImage({name:file.name,mimeType:file.type,data:encoded}); fileId=uploaded.fileId||uploaded.id||uploaded; } await API.submitAudienceQuestion({muminId:currentParticipant.Mumin_ID,name:Utils.$('#question-name').value,group:currentParticipant.Group_Name,questionType:Utils.$('#question-type').value,question:Utils.$('#question-text').value,fileId}); Utils.setMessage(msg,'Your question has been submitted successfully.','success'); e.target.reset(); }catch(x){Utils.setMessage(msg,x.message,'error')}finally{Utils.busy(btn,false)} }
 document.addEventListener('DOMContentLoaded',()=>{Utils.$('#participant-form').addEventListener('submit',searchParticipant);Utils.$('#start-quiz').addEventListener('click',openQuiz);Utils.$('#ask-question').addEventListener('click',()=>{Utils.show(Utils.$('#question-section'));Utils.$('#question-section').scrollIntoView({behavior:'smooth'})});Utils.$('#cancel-question').addEventListener('click',()=>Utils.hide(Utils.$('#question-section')));Utils.$('#audience-form').addEventListener('submit',submitQuestion);Utils.$('#question-type').addEventListener('change',e=>e.target.value==='Picture'?Utils.show(Utils.$('#question-image-wrap')):Utils.hide(Utils.$('#question-image-wrap')));});
+const result = await API.findParticipant(
+  Utils.$("#mumin-id").value.trim()
+);
+
+const participant = result.participant || result;
+
+if (!participant || result.found === false) {
+  throw new Error(
+    "Participant not found. Please check your Mumin ID."
+  );
+}
+
+currentParticipant = participant;
+renderProfile(participant);
