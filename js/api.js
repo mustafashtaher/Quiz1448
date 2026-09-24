@@ -1,33 +1,57 @@
-/* All backend communication is centralized here. The Apps Script endpoint expects the Gas method names and the payload shape used by the deployed backend. */
 const API = (() => {
-  async function call(action, payload = {}, token = sessionStorage.getItem(APP_CONFIG.SESSION_KEY)) {
+  async function call(action, payload = {}, token = null) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), APP_CONFIG.REQUEST_TIMEOUT);
+    const timer = setTimeout(
+      () => controller.abort(),
+      APP_CONFIG.REQUEST_TIMEOUT
+    );
 
     try {
+      const request = Object.assign({}, payload || {}, {
+        action,
+        token: token || null
+      });
+
       const response = await fetch(APP_CONFIG.API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action, payload, token }),
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(request),
         signal: controller.signal
       });
 
       const data = await response.json();
 
       if (!response.ok || data.success === false) {
-        throw new Error(data.message || data.error || 'The server could not complete this request.');
+        throw new Error(
+          data.message ||
+          data.error ||
+          "The server could not complete this request."
+        );
       }
 
-      // Support both wrapped responses and unwrapped responses.
-      if (data && data.data !== undefined) {
-        return data.data;
+      const result =
+        data && data.data !== undefined
+          ? data.data
+          : data;
+
+      if (result && result.success === false) {
+        throw new Error(
+          result.message ||
+          result.error ||
+          "The server rejected this request."
+        );
       }
 
-      return data;
+      return result;
     } catch (error) {
-      if (error && error.name === 'AbortError') {
-        throw new Error('The request timed out. Please try again.');
+      if (error && error.name === "AbortError") {
+        throw new Error(
+          "The request timed out. Please try again."
+        );
       }
+
       throw error;
     } finally {
       clearTimeout(timer);
@@ -36,93 +60,165 @@ const API = (() => {
 
   return {
     findParticipant: (id) => {
-      const muminId = String(id || '').trim();
-      return call('lookupParticipant', {
+      const muminId = String(id || "").trim();
+
+      return call("lookupParticipant", {
         Mumin_ID: muminId,
-        muminId: muminId
+        muminId
       });
     },
 
     getQuiz: (id, group, day) => {
-      const muminId = String(id || '').trim();
-      return call('getQuiz', {
+      const muminId = String(id || "").trim();
+
+      return call("getQuiz", {
         Mumin_ID: muminId,
-        muminId: muminId,
-        Group_Name: group,
-        groupName: group,
-        group: group,
-        day: day
+        muminId,
+        Group_Name: group || "",
+        groupName: group || "",
+        group: group || "",
+        day: day || ""
       });
     },
 
     submitQuiz: (payload) => {
-      const normalized = payload || {};
-      return call('submitQuiz', {
-        Mumin_ID: normalized.muminId || normalized.Mumin_ID,
-        muminId: normalized.muminId || normalized.Mumin_ID,
-        Group_Name: normalized.group || normalized.Group_Name,
-        groupName: normalized.group || normalized.Group_Name,
-        group: normalized.group || normalized.Group_Name,
-        day: normalized.day,
-        startedAt: normalized.startedAt,
-        submittedAt: normalized.submittedAt,
-        answers: normalized.answers || []
+      const value = payload || {};
+
+      return call("submitQuiz", {
+        Mumin_ID: value.Mumin_ID || value.muminId || "",
+        muminId: value.muminId || value.Mumin_ID || "",
+        Group_Name: value.Group_Name || value.group || "",
+        groupName:
+          value.groupName ||
+          value.group ||
+          value.Group_Name ||
+          "",
+        group: value.group || value.Group_Name || "",
+        day: value.day || "",
+        startedAt: value.startedAt || "",
+        submittedAt: value.submittedAt || "",
+        answers: Array.isArray(value.answers)
+          ? value.answers
+          : []
       });
     },
-
-    uploadImage: (payload) => call('uploadImage', payload),
 
     submitAudienceQuestion: (payload) => {
-      const normalized = payload || {};
-      return call('submitAudienceQuestion', {
-        Mumin_ID: normalized.muminId || normalized.Mumin_ID,
-        muminId: normalized.muminId || normalized.Mumin_ID,
-        Name: normalized.name || normalized.Name,
-        name: normalized.name || normalized.Name,
-        Group_Name: normalized.group || normalized.Group_Name,
-        groupName: normalized.group || normalized.Group_Name,
-        group: normalized.group || normalized.Group_Name,
-        QuestionType: normalized.questionType || normalized.QuestionType,
-        questionType: normalized.questionType || normalized.QuestionType,
-        Question: normalized.question || normalized.Question,
-        question: normalized.question || normalized.Question,
-        File_ID: normalized.fileId || normalized.File_ID,
-        fileId: normalized.fileId || normalized.File_ID,
-        image: normalized.image || null,
-        day: normalized.day,
-        type: normalized.type || normalized.questionType || normalized.QuestionType
+      const value = payload || {};
+
+      return call("submitAudienceQuestion", {
+        Mumin_ID: value.Mumin_ID || value.muminId || "",
+        muminId: value.muminId || value.Mumin_ID || "",
+        Name: value.Name || value.name || "",
+        name: value.name || value.Name || "",
+        Group_Name: value.Group_Name || value.group || "",
+        groupName:
+          value.groupName ||
+          value.group ||
+          value.Group_Name ||
+          "",
+        group: value.group || value.Group_Name || "",
+        QuestionType:
+          value.QuestionType ||
+          value.questionType ||
+          "text",
+        questionType:
+          value.questionType ||
+          value.QuestionType ||
+          "text",
+        Question: value.Question || value.question || "",
+        question: value.question || value.Question || "",
+        File_ID: value.File_ID || value.fileId || "",
+        fileId: value.fileId || value.File_ID || "",
+        image: value.image || null,
+        day: value.day || ""
       });
     },
 
-    login: (email, code) => call('presenterLogin', { email, code }, null),
+    login: (email, code) => {
+      return call(
+        "presenterLogin",
+        { email, code },
+        null
+      );
+    },
 
-    dashboard: (filters, token) => call('getDashboard', {
-      day: filters && (filters.day || filters.Day),
-      group: filters && (filters.group || filters.groupName || filters.Group_Name),
-      Group_Name: filters && (filters.Group_Name || filters.group || filters.groupName),
-      groupName: filters && (filters.groupName || filters.group || filters.Group_Name),
-      Mumin_ID: filters && filters.Mumin_ID,
-      muminId: filters && filters.muminId
-    }, token),
+    dashboard: (filters, token) => {
+      const value = filters || {};
 
-    saveQuestion: (question, token) => call('saveQuestion', question, token),
+      return call(
+        "getDashboard",
+        {
+          day: value.day || value.Day || "",
+          group:
+            value.group ||
+            value.groupName ||
+            value.Group_Name ||
+            "ALL",
+          groupName:
+            value.groupName ||
+            value.group ||
+            value.Group_Name ||
+            "ALL",
+          Group_Name:
+            value.Group_Name ||
+            value.group ||
+            value.groupName ||
+            "ALL"
+        },
+        token
+      );
+    },
 
-    deleteQuestion: (questionId, token) => call('deleteQuestion', { rowNumber: questionId }, token),
+    saveQuestion: (question, token) => {
+      return call("saveQuestion", question, token);
+    },
 
-    setQuestionActive: (id, active, token) => call('updateQuestionActive', {
-      rowNumber: id,
-      active: active
-    }, token),
+    deleteQuestion: (rowNumber, token) => {
+      return call(
+        "deleteQuestion",
+        { rowNumber },
+        token
+      );
+    },
 
-    updateAudienceQuestion: (payload, token) => call('updateAudienceQuestion', payload, token),
+    updateAudienceQuestion: (payload, token) => {
+      return call(
+        "updateAudienceQuestion",
+        payload,
+        token
+      );
+    },
 
-    saveSettings: (settings, token) => call('updateSettings', { settings }, token),
+    saveSettings: (settings, token) => {
+      return call(
+        "updateSettings",
+        { settings },
+        token
+      );
+    },
 
-    audience: (filters) => call('getAudienceView', {
-      day: filters && (filters.day || filters.Day),
-      group: filters && (filters.group || filters.groupName || filters.Group_Name),
-      Group_Name: filters && (filters.Group_Name || filters.group || filters.groupName),
-      groupName: filters && (filters.groupName || filters.group || filters.Group_Name)
-    }, null)
+    audience: (filters) => {
+      const value = filters || {};
+
+      return call("getAudienceView", {
+        day: value.day || value.Day || "",
+        group:
+          value.group ||
+          value.groupName ||
+          value.Group_Name ||
+          "ALL",
+        groupName:
+          value.groupName ||
+          value.group ||
+          value.Group_Name ||
+          "ALL",
+        Group_Name:
+          value.Group_Name ||
+          value.group ||
+          value.groupName ||
+          "ALL"
+      });
+    }
   };
 })();
